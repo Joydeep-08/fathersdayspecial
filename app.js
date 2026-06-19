@@ -61,6 +61,16 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function genId() {
+  if (window.crypto && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  // fallback uuid v4 for contexts without crypto.randomUUID (e.g. non-HTTPS)
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 function spawnPetals() {
   const field = $("petalField");
   const colors = ["#E8B4A0", "#C97B86", "#B6A6C9"];
@@ -313,21 +323,20 @@ $("btnGoPreview").addEventListener("click", async () => {
       state.photoUrl = pub.publicUrl;
     }
 
-    // create draft gift row
-    const { data, error } = await sb
-      .from("gifts")
-      .insert({
-        sender_name: state.senderName,
-        dad_name: state.dadName,
-        custom_message: state.customMessage,
-        photo_url: state.photoUrl,
-        paid: false,
-      })
-      .select()
-      .single();
+    // create draft gift row — we generate the id ourselves so we never need
+    // to read the row back (a fresh unpaid row isn't publicly readable, by design)
+    const newId = genId();
+    const { error } = await sb.from("gifts").insert({
+      id: newId,
+      sender_name: state.senderName,
+      dad_name: state.dadName,
+      custom_message: state.customMessage,
+      photo_url: state.photoUrl,
+      paid: false,
+    });
     if (error) throw error;
 
-    state.giftId = data.id;
+    state.giftId = newId;
     state.mode = "preview";
 
     populateContent();
@@ -335,7 +344,7 @@ $("btnGoPreview").addEventListener("click", async () => {
     showScreen("screen-intro");
   } catch (err) {
     console.error(err);
-    errEl.textContent = "Something went wrong saving your gift. Please try again.";
+    errEl.textContent = "Something went wrong saving your gift" + (err && err.message ? ": " + err.message : ". Please try again.");
   } finally {
     btn.disabled = false;
     btn.textContent = "Preview the gift →";
