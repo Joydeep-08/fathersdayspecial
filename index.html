@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>A Father's Day Gift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Quicksand:wght@500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="petal-field" id="petalField"></div>
+
+<div class="app-shell" id="appShell">
+
+  <!-- progress dots (hidden on form / payment / success) -->
+  <div class="progress" id="progressDots" style="display:none;">
+    <div class="dot" data-step="1"></div>
+    <div class="dot" data-step="2"></div>
+    <div class="dot" data-step="3"></div>
+    <div class="dot" data-step="4"></div>
+  </div>
+
+  <!-- ============ SCREEN: loading ============ -->
+  <section class="screen active" id="screen-loading">
+    <div class="intro-card">
+      <div class="heart">🎈</div>
+      <p class="muted">Just a moment…</p>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN: create form (sender) ============ -->
+  <section class="screen" id="screen-form">
+    <div class="eyebrow">Father's Day Gift</div>
+    <h1>Make something<br>he'll keep forever</h1>
+    <p class="muted" style="margin-bottom:20px;">Fill this in, preview it, then send the link to your dad.</p>
+
+    <div class="field">
+      <label for="inputSender">Your name</label>
+      <input type="text" id="inputSender" maxlength="40" placeholder="e.g. Asha">
+    </div>
+
+    <div class="field">
+      <label for="inputDad">What you call your dad</label>
+      <input type="text" id="inputDad" maxlength="40" placeholder="e.g. Papa, Dad, Appa">
+    </div>
+
+    <div class="field">
+      <label for="inputMessage">A small message for the last page</label>
+      <textarea id="inputMessage" rows="3" maxlength="280" placeholder="Something only the two of you would get…"></textarea>
+      <div class="char-count"><span id="msgCount">0</span>/280</div>
+    </div>
+
+    <div class="field">
+      <label>A photo of the two of you <span class="muted" style="font-weight:500;">(optional)</span></label>
+      <div class="photo-upload" id="photoUpload">
+        <input type="file" id="inputPhoto" accept="image/*">
+        <div id="photoPlaceholder">
+          <div style="font-size:1.6rem;">📷</div>
+          <div class="hint">Tap to add a photo</div>
+        </div>
+        <img id="photoPreviewImg" style="display:none;">
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+    <div id="formError" class="discount-msg err"></div>
+    <button class="btn btn-primary btn-block" id="btnGoPreview">Preview the gift →</button>
+  </section>
+
+  <!-- ============ SCREEN: intro gate (preview + recipient) ============ -->
+  <section class="screen" id="screen-intro">
+    <div class="intro-card">
+      <div class="heart">🎈💌</div>
+      <div class="eyebrow">A little something for</div>
+      <h1 id="introDadName">Dad</h1>
+      <p class="script" id="introFromName">from Asha</p>
+      <button class="btn btn-primary" id="btnOpenGift">Open it ❤</button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN: page 1 — candle ============ -->
+  <section class="screen" id="screen-p1">
+    <div class="stage">
+      <div class="eyebrow">Page one</div>
+      <h2 id="p1Headline">Make a wish</h2>
+      <p class="muted">Tap the flame to blow out the candle.</p>
+      <div class="candle-wrap">
+        <div class="smoke" id="candleSmoke"></div>
+        <div class="flame" id="candleFlame"></div>
+        <div class="wick"></div>
+        <div class="candle-body"></div>
+      </div>
+      <p class="candle-tap-hint" id="candleHint">👆 tap the flame</p>
+      <div class="wish-result" id="wishResult">
+        <p class="script">Wish granted ✨</p>
+        <p class="muted" id="wishFromLine">From Asha, with love.</p>
+        <button class="btn btn-primary" id="btnToP2">Open the next surprise →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN: page 2 — one balloon + photo ============ -->
+  <section class="screen" id="screen-p2">
+    <div class="single-balloon-stage">
+      <div class="eyebrow">Page two</div>
+      <h2>Pop the balloon</h2>
+      <p class="muted">It's hiding something for you.</p>
+      <div id="p2BalloonHolder"></div>
+      <div class="photo-reveal" id="p2PhotoReveal">
+        <img id="p2PhotoImg" src="" alt="A memory">
+      </div>
+      <p class="photo-caption" id="p2Caption">A little memory from Asha</p>
+      <button class="btn btn-primary" id="btnToP3" style="display:none;">Keep going →</button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN: page 3 — letter ============ -->
+  <section class="screen" id="screen-p3">
+    <div class="eyebrow">Page three</div>
+    <div class="letter-card">
+      <h2 id="p3Greeting">Dear Dad,</h2>
+      <p id="p3Body"></p>
+      <div class="letter-signature" id="p3Signature">With all my heart, Asha</div>
+    </div>
+    <button class="btn btn-primary btn-block" id="btnToP4" style="margin-top:18px;">One more thing →</button>
+  </section>
+
+  <!-- ============ SCREEN: page 4 — 4 balloons + message ============ -->
+  <section class="screen" id="screen-p4">
+    <div class="eyebrow">Page four</div>
+    <h2>Pop all 4 balloons</h2>
+    <div class="word-bar" id="wordBar">
+      <span class="blank">_____</span><span class="blank">_____</span><span class="blank">_____</span><span class="blank">_____</span>
+    </div>
+    <div class="balloon-grid" id="p4BalloonGrid"></div>
+    <div class="final-message" id="p4FinalMessage">
+      <p id="p4CustomText" style="font-size:1.05rem;"></p>
+      <div class="letter-signature" id="p4Signature">— Asha</div>
+      <p class="script" style="margin-top:6px;">Happy Father's Day 🎈</p>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary btn-block" id="btnToPayment" style="display:none;">Continue to payment →</button>
+    <button class="btn btn-ghost btn-block" id="btnReplay" style="display:none; margin-top:10px;">Replay from the start</button>
+  </section>
+
+  <!-- ============ SCREEN: payment (sender only) ============ -->
+  <section class="screen" id="screen-payment">
+    <div class="banner-preview">YOU'RE THE ONLY ONE WHO SEES THIS SCREEN</div>
+    <div style="padding-top:24px;">
+      <div class="eyebrow">Last step</div>
+      <h2 id="paymentHeadline">Send this to Dad</h2>
+      <p class="muted">Pay once, get a private link you can share anywhere.</p>
+
+      <div class="summary-card">
+        <div class="summary-row"><span>Personalised gift experience</span><span id="basePriceLabel">₹99</span></div>
+        <div class="summary-row" id="discountSummaryRow" style="display:none;">
+          <span id="discountLabel">Discount</span><span id="discountAmountLabel">−₹0</span>
+        </div>
+        <div class="summary-row total"><span>Total</span><span id="totalPriceLabel">₹99</span></div>
+
+        <div class="discount-row">
+          <input type="text" id="inputDiscount" placeholder="Discount code">
+          <button class="btn btn-ghost" id="btnApplyDiscount">Apply</button>
+        </div>
+        <div class="discount-msg" id="discountMsg"></div>
+      </div>
+
+      <div id="paymentError" class="discount-msg err"></div>
+      <button class="btn btn-primary btn-block" id="btnPay">Pay ₹99 &amp; get link</button>
+      <p class="footer-note">Secure checkout via Razorpay.</p>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN: success (sender only) ============ -->
+  <section class="screen" id="screen-success">
+    <div class="intro-card">
+      <div class="heart">🎉</div>
+      <h2>All set!</h2>
+      <p class="muted">Share this link with <span id="successDadName">Dad</span>:</p>
+      <div class="link-box">
+        <input type="text" id="giftLinkInput" readonly>
+        <button class="btn btn-ghost" id="btnCopyLink">Copy</button>
+      </div>
+      <button class="btn btn-primary btn-block" id="btnShare" style="display:none;">Share link</button>
+      <button class="btn btn-ghost" id="btnCreateAnother" style="margin-top:6px;">Create another gift</button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN: error (bad/expired link) ============ -->
+  <section class="screen" id="screen-error">
+    <div class="intro-card">
+      <div class="heart">💔</div>
+      <h2>Hmm, this link isn't ready</h2>
+      <p class="muted" id="errorDetail">This gift may still be in progress, or the link is incomplete.</p>
+    </div>
+  </section>
+
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
