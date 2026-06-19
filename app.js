@@ -422,7 +422,7 @@ $("btnPay").addEventListener("click", () => {
     theme: { color: "#8B4452" },
     handler: async function (response) {
       try {
-        const { error } = await sb
+        const { data, error } = await sb
           .from("gifts")
           .update({
             paid: true,
@@ -430,8 +430,12 @@ $("btnPay").addEventListener("click", () => {
             discount_code: state.discountCode,
             razorpay_payment_id: response.razorpay_payment_id,
           })
-          .eq("id", state.giftId);
+          .eq("id", state.giftId)
+          .select();
         if (error) throw error;
+        if (!data || data.length === 0) {
+          throw new Error("no matching gift row was updated");
+        }
 
         const link = `${location.origin}${location.pathname}?gift=${state.giftId}`;
         $("giftLinkInput").value = link;
@@ -442,7 +446,14 @@ $("btnPay").addEventListener("click", () => {
         showScreen("screen-success");
       } catch (err) {
         console.error(err);
-        errEl.textContent = "Payment went through, but saving the link failed. Contact support with payment ID " + response.razorpay_payment_id + ".";
+        errEl.textContent =
+          "Payment went through, but saving the link failed (" +
+          (err && err.message ? err.message : "unknown error") +
+          "). Gift ID: " +
+          state.giftId +
+          ", payment ID: " +
+          response.razorpay_payment_id +
+          ". You can mark it paid manually in Supabase using these IDs.";
       }
     },
     modal: { ondismiss: function () {} },
