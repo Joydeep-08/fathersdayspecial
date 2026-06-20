@@ -1,3 +1,4 @@
+
 /* ===================================================================
    Father's Day Gift — app logic
    Modes:
@@ -11,7 +12,7 @@ const SUPABASE_URL = "https://wbfuquzevipaglrddvur.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndiZnVxdXpldmlwYWdscmRkdnVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3NTgyNjEsImV4cCI6MjA5NzMzNDI2MX0.jawEk2_OGwinPik7mOk5d90B_DMeiwsrT1SsB0CNBdU";
 
 // TODO: replace with your real Razorpay Key ID (Dashboard → Settings → API Keys)
-const RAZORPAY_KEY_ID = "rzp_live_Sz9gct8RO5E1jB";
+const RAZORPAY_KEY_ID = "rzp_test_REPLACE_ME";
 
 const BASE_PRICE_RUPEES = 99;
 
@@ -173,7 +174,7 @@ function populateContent() {
   $("p4Signature").textContent = "— " + senderName;
 
   $("paymentHeadline").textContent = "Send this to " + dadName;
-  $("btnPay").textContent = "Pay ₹" + BASE_PRICE_RUPEES + " & get link";
+  updatePayButton();
   $("basePriceLabel").textContent = "₹" + BASE_PRICE_RUPEES;
   $("totalPriceLabel").textContent = "₹" + BASE_PRICE_RUPEES;
   $("successDadName").textContent = dadName;
@@ -352,6 +353,11 @@ $("btnGoPreview").addEventListener("click", async () => {
 });
 
 // ---------- DISCOUNT CODE ----------
+function updatePayButton() {
+  $("btnPay").textContent =
+    state.finalAmount === 0 ? "Claim your free gift →" : "Pay ₹" + state.finalAmount + " & get link";
+}
+
 $("btnApplyDiscount").addEventListener("click", async () => {
   const codeInput = $("inputDiscount").value.trim().toUpperCase();
   const msgEl = $("discountMsg");
@@ -375,23 +381,23 @@ $("btnApplyDiscount").addEventListener("click", async () => {
       state.discountCode = null;
       state.finalAmount = BASE_PRICE_RUPEES;
       $("totalPriceLabel").textContent = "₹" + BASE_PRICE_RUPEES;
-      $("btnPay").textContent = "Pay ₹" + BASE_PRICE_RUPEES + " & get link";
+      updatePayButton();
       return;
     }
 
     const discountAmt = Math.round((BASE_PRICE_RUPEES * data.percent_off) / 100);
-    const finalAmount = Math.max(BASE_PRICE_RUPEES - discountAmt, 1);
+    const finalAmount = Math.max(BASE_PRICE_RUPEES - discountAmt, 0);
     state.discountCode = data.code;
     state.finalAmount = finalAmount;
 
     $("discountSummaryRow").style.display = "flex";
     $("discountLabel").textContent = `Discount (${data.code})`;
     $("discountAmountLabel").textContent = "−₹" + discountAmt;
-    $("totalPriceLabel").textContent = "₹" + finalAmount;
-    $("btnPay").textContent = "Pay ₹" + finalAmount + " & get link";
+    $("totalPriceLabel").textContent = finalAmount === 0 ? "FREE 🎉" : "₹" + finalAmount;
+    updatePayButton();
 
     msgEl.classList.add("ok");
-    msgEl.textContent = `Applied! ${data.percent_off}% off.`;
+    msgEl.textContent = finalAmount === 0 ? "Applied! This one's on the house 🎉" : `Applied! ${data.percent_off}% off.`;
   } catch (err) {
     console.error(err);
     msgEl.classList.add("err");
@@ -400,9 +406,57 @@ $("btnApplyDiscount").addEventListener("click", async () => {
 });
 
 // ---------- PAYMENT ----------
-$("btnPay").addEventListener("click", () => {
+async function finalizeGift(paymentId) {
+  const errEl = $("paymentError");
+  try {
+    const { data, error } = await sb
+      .from("gifts")
+      .update({
+        paid: true,
+        amount_paid: state.finalAmount,
+        discount_code: state.discountCode,
+        razorpay_payment_id: paymentId,
+      })
+      .eq("id", state.giftId)
+      .select();
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      throw new Error("no matching gift row was updated");
+    }
+
+    const link = `${location.origin}${location.pathname}?gift=${state.giftId}`;
+    $("giftLinkInput").value = link;
+    $("successDadName").textContent = state.dadName;
+    if (navigator.share) {
+      $("btnShare").style.display = "inline-block";
+    }
+    showScreen("screen-success");
+  } catch (err) {
+    console.error(err);
+    errEl.textContent =
+      "Saving the link failed (" +
+      (err && err.message ? err.message : "unknown error") +
+      "). Gift ID: " +
+      state.giftId +
+      (paymentId ? ", payment ID: " + paymentId : "") +
+      ". You can mark it paid manually in Supabase using these IDs.";
+  }
+}
+
+$("btnPay").addEventListener("click", async () => {
   const errEl = $("paymentError");
   errEl.textContent = "";
+
+  // a 100%-off code makes the gift free — skip Razorpay entirely
+  if (state.finalAmount === 0) {
+    const btn = $("btnPay");
+    btn.disabled = true;
+    btn.textContent = "Setting things up…";
+    await finalizeGift(null);
+    btn.disabled = false;
+    updatePayButton();
+    return;
+  }
 
   if (!window.Razorpay) {
     errEl.textContent = "Payment couldn't load. Check your connection and try again.";
@@ -420,41 +474,8 @@ $("btnPay").addEventListener("click", () => {
     name: "A Father's Day Gift",
     description: "For " + state.dadName,
     theme: { color: "#8B4452" },
-    handler: async function (response) {
-      try {
-        const { data, error } = await sb
-          .from("gifts")
-          .update({
-            paid: true,
-            amount_paid: state.finalAmount,
-            discount_code: state.discountCode,
-            razorpay_payment_id: response.razorpay_payment_id,
-          })
-          .eq("id", state.giftId)
-          .select();
-        if (error) throw error;
-        if (!data || data.length === 0) {
-          throw new Error("no matching gift row was updated");
-        }
-
-        const link = `${location.origin}${location.pathname}?gift=${state.giftId}`;
-        $("giftLinkInput").value = link;
-        $("successDadName").textContent = state.dadName;
-        if (navigator.share) {
-          $("btnShare").style.display = "inline-block";
-        }
-        showScreen("screen-success");
-      } catch (err) {
-        console.error(err);
-        errEl.textContent =
-          "Payment went through, but saving the link failed (" +
-          (err && err.message ? err.message : "unknown error") +
-          "). Gift ID: " +
-          state.giftId +
-          ", payment ID: " +
-          response.razorpay_payment_id +
-          ". You can mark it paid manually in Supabase using these IDs.";
-      }
+    handler: function (response) {
+      finalizeGift(response.razorpay_payment_id);
     },
     modal: { ondismiss: function () {} },
   };
