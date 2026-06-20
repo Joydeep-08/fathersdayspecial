@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Make a Father's Day Gift</title>
+<title>A Father's Day Gift</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Quicksand:wght@500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -72,7 +72,6 @@
   };
 </script>
 <style>
-  /* the one animation Tailwind's static utilities can't parametrize per-element (random fly direction) */
   @keyframes confettifly { to { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity: 0; } }
   .confetti-bit { animation: confettifly .7s ease-out forwards; }
   @media (prefers-reduced-motion: reduce) {
@@ -94,46 +93,17 @@
     <div class="dot w-2.5 h-[13px] rounded-full bg-[#E6D9D2] transition-all duration-300" data-step="4"></div>
   </div>
 
-  <!-- ============ SCREEN: create form ============ -->
-  <section id="screen-form" class="screen flex flex-col flex-1 px-7 pt-8 pb-7 animate-fadein">
-    <div class="text-[0.72rem] tracking-[0.14em] uppercase text-inksoft mb-1.5">Father's Day Gift</div>
-    <h1 class="font-display text-[1.9rem] font-semibold text-rosedeep leading-tight mb-2">Make something<br>he'll keep forever</h1>
-    <p class="text-inksoft text-sm mb-5">Fill this in, preview it for free, then pay once you're happy with it.</p>
+  <!-- ============ SCREEN: loading ============ -->
+  <section id="screen-loading" class="screen flex flex-col flex-1 px-7 pt-8 pb-7 animate-fadein items-center justify-center text-center gap-3">
+    <div class="text-4xl">🎈</div>
+    <p class="text-inksoft text-sm">Just a moment…</p>
+  </section>
 
-    <div class="mb-4">
-      <label for="inputSender" class="block text-[0.82rem] font-bold text-rosedeep mb-1.5">Your name</label>
-      <input type="text" id="inputSender" maxlength="40" placeholder="e.g. Asha"
-        class="w-full border-[1.5px] border-[#E9D7CF] bg-cream rounded-2xl px-3.5 py-3 text-[0.96rem] text-ink focus:outline-none focus:border-rose">
-    </div>
-
-    <div class="mb-4">
-      <label for="inputDad" class="block text-[0.82rem] font-bold text-rosedeep mb-1.5">What you call your dad</label>
-      <input type="text" id="inputDad" maxlength="40" placeholder="e.g. Papa, Dad, Appa"
-        class="w-full border-[1.5px] border-[#E9D7CF] bg-cream rounded-2xl px-3.5 py-3 text-[0.96rem] text-ink focus:outline-none focus:border-rose">
-    </div>
-
-    <div class="mb-4">
-      <label for="inputMessage" class="block text-[0.82rem] font-bold text-rosedeep mb-1.5">A small message for the last page</label>
-      <textarea id="inputMessage" rows="3" maxlength="280" placeholder="Something only the two of you would get…"
-        class="w-full resize-none border-[1.5px] border-[#E9D7CF] bg-cream rounded-2xl px-3.5 py-3 text-[0.96rem] text-ink focus:outline-none focus:border-rose"></textarea>
-      <div class="text-right text-[0.74rem] text-inksoft mt-1"><span id="msgCount">0</span>/280</div>
-    </div>
-
-    <div class="mb-4">
-      <label class="block text-[0.82rem] font-bold text-rosedeep mb-1.5">A photo of the two of you <span class="text-inksoft font-medium">(optional)</span></label>
-      <div class="relative overflow-hidden border-2 border-dashed border-[#E0C7BD] rounded-2xl p-4 text-center bg-cream cursor-pointer">
-        <input type="file" id="inputPhoto" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
-        <div id="photoPlaceholder">
-          <div class="text-2xl">📷</div>
-          <div class="text-inksoft text-sm">Tap to add a photo</div>
-        </div>
-        <img id="photoPreviewImg" class="hidden w-full max-h-40 object-cover rounded-xl">
-      </div>
-    </div>
-
-    <div class="flex-1"></div>
-    <div id="formError" class="text-[0.82rem] text-[#B33B3B] min-h-[1.2em] mb-1"></div>
-    <button id="btnGoPreview" class="w-full rounded-full px-6 py-3.5 font-bold text-[0.98rem] bg-rosedeep text-paper shadow-[0_10px_24px_-8px_rgba(139,68,82,0.55)] active:scale-[0.97] transition disabled:opacity-45 disabled:cursor-not-allowed">Preview the gift →</button>
+  <!-- ============ SCREEN: error ============ -->
+  <section id="screen-error" class="screen hidden flex-col flex-1 px-7 pt-8 pb-7 animate-fadein items-center justify-center text-center gap-3">
+    <div class="text-4xl">💔</div>
+    <h2 class="font-display text-2xl font-semibold text-rosedeep">Hmm, this link isn't ready</h2>
+    <p id="errorDetail" class="text-inksoft text-sm">This gift may still be in progress, or the link is incomplete.</p>
   </section>
 
   <!-- ============ SCREEN: intro gate ============ -->
@@ -143,7 +113,6 @@
     <h1 id="introDadName" class="font-display text-[1.9rem] font-semibold text-rosedeep">Dad</h1>
     <p id="introFromName" class="font-script text-2xl text-rosedeep">from Asha</p>
     <button id="btnOpenGift" class="rounded-full px-6 py-3.5 font-bold bg-rosedeep text-paper shadow-[0_10px_24px_-8px_rgba(139,68,82,0.55)] active:scale-[0.97] transition">Open it ❤</button>
-    <p class="text-[0.76rem] text-inksoft mt-2">This is exactly what {dad} will see — nothing is sent or charged yet.</p>
   </section>
 
   <!-- ============ SCREEN: page 1 — candle ============ -->
@@ -203,78 +172,25 @@
       <p class="font-script text-xl text-rosedeep mt-1.5">Happy Father's Day 🎈</p>
     </div>
     <div class="flex-1"></div>
-    <button id="btnToPayment" class="hidden w-full rounded-full px-6 py-3.5 font-bold bg-rosedeep text-paper shadow-[0_10px_24px_-8px_rgba(139,68,82,0.55)] active:scale-[0.97] transition">Continue to payment →</button>
-  </section>
-
-  <!-- ============ SCREEN: payment ============ -->
-  <section id="screen-payment" class="screen hidden flex-col flex-1 animate-fadein">
-    <div class="bg-rosedeep text-paper text-center text-[0.78rem] font-bold tracking-wide py-2">YOU'RE THE ONLY ONE WHO SEES THIS SCREEN</div>
-    <div class="px-7 pt-6 pb-7 flex flex-col flex-1">
-      <div class="text-[0.72rem] tracking-[0.14em] uppercase text-inksoft mb-1.5">Last step</div>
-      <h2 id="paymentHeadline" class="font-display text-2xl font-semibold text-rosedeep mb-1.5">Send this to Dad</h2>
-      <p class="text-inksoft text-sm mb-4">Pay once, get a private link you can share anywhere.</p>
-
-      <div class="bg-cream rounded-2xl p-4.5 p-[18px] mb-4">
-        <div class="flex justify-between text-[0.95rem] py-1.5"><span>Personalised gift experience</span><span id="basePriceLabel">₹99</span></div>
-        <div id="discountSummaryRow" class="hidden justify-between text-[0.95rem] py-1.5">
-          <span id="discountLabel">Discount</span><span id="discountAmountLabel">−₹0</span>
-        </div>
-        <div class="flex justify-between font-bold text-rosedeep border-t border-dashed border-[#E0C7BD] mt-1.5 pt-2.5">
-          <span>Total</span><span id="totalPriceLabel">₹99</span>
-        </div>
-
-        <div class="flex gap-2 mt-3.5">
-          <input type="text" id="inputDiscount" placeholder="Discount code"
-            class="flex-1 border-[1.5px] border-[#E9D7CF] rounded-2xl px-3 py-2.5 bg-paper focus:outline-none focus:border-rose">
-          <button id="btnApplyDiscount" class="rounded-full px-5 py-2.5 font-bold text-rosedeep border-[1.5px] border-rosesoft active:scale-[0.97] transition">Apply</button>
-        </div>
-        <div id="discountMsg" class="text-[0.82rem] mt-1.5 min-h-[1.2em]"></div>
-      </div>
-
-      <div id="paymentError" class="text-[0.82rem] text-[#B33B3B] min-h-[1.2em] mb-1"></div>
-      <button id="btnPay" class="w-full rounded-full px-6 py-3.5 font-bold bg-rosedeep text-paper shadow-[0_10px_24px_-8px_rgba(139,68,82,0.55)] active:scale-[0.97] transition disabled:opacity-45 disabled:cursor-not-allowed">Pay ₹99 &amp; get link</button>
-      <p class="text-center text-[0.76rem] text-inksoft mt-3">Secure checkout via Razorpay. Your gift is only saved after payment is verified.</p>
-    </div>
-  </section>
-
-  <!-- ============ SCREEN: success ============ -->
-  <section id="screen-success" class="screen hidden flex-col flex-1 px-7 pt-8 pb-7 animate-fadein items-center justify-center text-center gap-2">
-    <div class="text-4xl">🎉</div>
-    <h2 class="font-display text-2xl font-semibold text-rosedeep">All set!</h2>
-    <p class="text-inksoft text-sm">Share this link with <span id="successDadName">Dad</span>:</p>
-    <div class="flex items-center gap-2 bg-cream rounded-2xl px-3 py-2.5 my-3 w-full">
-      <input type="text" id="giftLinkInput" readonly class="flex-1 border-none bg-transparent text-[0.85rem] text-ink focus:outline-none">
-      <button id="btnCopyLink" class="rounded-full px-4 py-2 font-bold text-rosedeep border-[1.5px] border-rosesoft active:scale-[0.97] transition shrink-0">Copy</button>
-    </div>
-    <button id="btnShare" class="hidden w-full rounded-full px-6 py-3.5 font-bold bg-rosedeep text-paper shadow-[0_10px_24px_-8px_rgba(139,68,82,0.55)] active:scale-[0.97] transition">Share link</button>
-    <button id="btnCreateAnother" class="rounded-full px-6 py-3 font-bold text-rosedeep border-[1.5px] border-rosesoft active:scale-[0.97] transition mt-1.5">Create another gift</button>
+    <button id="btnReplay" class="hidden w-full rounded-full px-6 py-3 font-bold text-rosedeep border-[1.5px] border-rosesoft active:scale-[0.97] transition mt-2.5">Replay from the start</button>
   </section>
 
 </div>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
 /* ===================================================================
-   Father's Day Gift — sender app
-   Nothing touches the database until payment is verified server-side.
-   The Supabase anon key used here can only ever SELECT (see setup.sql);
-   all writes happen inside the "checkout" Edge Function with the
-   service-role key, after it has verified the Razorpay signature itself.
+   Father's Day Gift — recipient viewer
+   Read-only. The anon key used here can only SELECT rows where paid = true
+   (see setup.sql); there is no write path in this file at all.
 =================================================================== */
 const SUPABASE_URL = "https://iliakhaufgpjjtwamisn.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsaWFraGF1Zmdwamp0d2FtaXNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NTU0NTMsImV4cCI6MjA5NjQzMTQ1M30.nim8jt-cUhb3IIWjnd0FC3NF6xS_gg8RelBBJG1bIno";
-const BASE_PRICE_RUPEES = 99;
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = (id) => document.getElementById(id);
 
-const state = {
-  senderName: "", dadName: "", customMessage: "",
-  photoDataUrl: null,
-  finalAmount: BASE_PRICE_RUPEES,
-  discountCode: null,
-};
+const state = { senderName: "", dadName: "", customMessage: "", photoUrl: null };
 
 // ---------- screen plumbing ----------
 function showScreen(id) {
@@ -282,11 +198,12 @@ function showScreen(id) {
   const el = $(id);
   el.classList.remove("hidden");
   el.classList.add("flex");
-  $("progressDots").classList.toggle("flex", ["screen-p1","screen-p2","screen-p3","screen-p4"].includes(id));
-  $("progressDots").classList.toggle("hidden", !["screen-p1","screen-p2","screen-p3","screen-p4"].includes(id));
+  const stepped = ["screen-p1","screen-p2","screen-p3","screen-p4"].includes(id);
+  $("progressDots").classList.toggle("flex", stepped);
+  $("progressDots").classList.toggle("hidden", !stepped);
 }
 function setProgress(step) {
-  document.querySelectorAll(".progress, #progressDots .dot").forEach((dot) => {
+  document.querySelectorAll("#progressDots .dot").forEach((dot) => {
     const s = Number(dot.dataset.step);
     dot.classList.toggle("bg-rose", s < step);
     dot.classList.toggle("scale-110", s < step);
@@ -363,20 +280,20 @@ function letterBody(dadName, senderName) {
 }
 
 function populateContent() {
-  const { dadName, senderName, customMessage, photoDataUrl } = state;
+  const { dadName, senderName, customMessage, photoUrl } = state;
   $("introDadName").textContent = dadName;
   $("introFromName").textContent = "from " + senderName;
   $("p1Headline").textContent = "Make a wish, " + dadName;
   $("wishFromLine").textContent = "From " + senderName + ", with love.";
   $("p2Caption").textContent = "A little memory from " + senderName;
-  $("p2PhotoImg").src = photoDataUrl || "";
+  $("p2PhotoImg").src = photoUrl || "data:image/svg+xml;utf8," + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="220" height="220"><rect width="220" height="220" fill="#F3E1D8"/><text x="50%" y="54%" font-size="64" text-anchor="middle" dominant-baseline="middle">💛</text></svg>`
+  );
   $("p3Greeting").textContent = "Dear " + dadName + ",";
   $("p3Body").textContent = letterBody(dadName, senderName);
   $("p3Signature").textContent = "With all my heart, " + senderName;
   $("p4CustomText").textContent = customMessage;
   $("p4Signature").textContent = "— " + senderName;
-  $("paymentHeadline").textContent = "Send this to " + dadName;
-  $("successDadName").textContent = dadName;
 }
 
 // ---------- page resets ----------
@@ -410,7 +327,7 @@ function resetPage4() {
   $("p4BalloonGrid").innerHTML = "";
   $("p4FinalMessage").classList.remove("opacity-100","translate-y-0");
   $("p4FinalMessage").classList.add("opacity-0","translate-y-2.5");
-  $("btnToPayment").classList.add("hidden");
+  $("btnReplay").classList.add("hidden");
   const wordBar = $("wordBar");
   wordBar.innerHTML = PAGE4_WORDS.map(() => '<span class="text-[#D8C3BB]">_____</span>').join("");
   let poppedCount = 0;
@@ -425,7 +342,7 @@ function resetPage4() {
         poppedCount++;
         if (poppedCount === PAGE4_WORDS.length) {
           $("p4FinalMessage").classList.add("opacity-100","translate-y-0");
-          $("btnToPayment").classList.remove("hidden");
+          $("btnReplay").classList.remove("hidden");
         }
       });
     });
@@ -446,193 +363,43 @@ $("btnToP2").addEventListener("click", () => { showScreen("screen-p2"); setProgr
 $("btnToP3").addEventListener("click", () => { showScreen("screen-p3"); setProgress(3); });
 $("btnToP4").addEventListener("click", () => { showScreen("screen-p4"); setProgress(4); });
 $("btnOpenGift").addEventListener("click", () => { showScreen("screen-p1"); setProgress(1); });
-$("btnToPayment").addEventListener("click", () => { showScreen("screen-payment"); });
+$("btnReplay").addEventListener("click", () => { resetAllPages(); showScreen("screen-intro"); });
 
-// ---------- form: compress photo, validate, go straight to preview (no DB writes) ----------
-function compressImage(file, maxDim = 1000, quality = 0.82) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        let { width, height } = img;
-        if (width > height && width > maxDim) { height = Math.round(height * maxDim / width); width = maxDim; }
-        else if (height > maxDim) { width = Math.round(width * maxDim / height); height = maxDim; }
-        const canvas = document.createElement("canvas");
-        canvas.width = width; canvas.height = height;
-        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL("image/jpeg", quality));
-      };
-      img.onerror = reject;
-      img.src = reader.result;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+// ---------- init: load the gift by id, read-only ----------
+async function init() {
+  spawnPetals();
+  const params = new URLSearchParams(location.search);
+  const giftId = params.get("gift");
 
-$("inputMessage").addEventListener("input", (e) => { $("msgCount").textContent = e.target.value.length; });
-
-$("inputPhoto").addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  try {
-    const dataUrl = await compressImage(file);
-    state.photoDataUrl = dataUrl;
-    $("photoPreviewImg").src = dataUrl;
-    $("photoPreviewImg").classList.remove("hidden");
-    $("photoPlaceholder").style.display = "none";
-  } catch {
-    $("formError").textContent = "Couldn't read that photo — try a different file.";
-  }
-});
-
-$("btnGoPreview").addEventListener("click", () => {
-  const sender = $("inputSender").value.trim();
-  const dad = $("inputDad").value.trim();
-  const message = $("inputMessage").value.trim();
-  const errEl = $("formError");
-  errEl.textContent = "";
-  if (!sender || !dad || !message) {
-    errEl.textContent = "Please fill in your name, dad's name, and a short message.";
+  if (!giftId) {
+    $("errorDetail").textContent = "This link is missing its gift ID.";
+    showScreen("screen-error");
     return;
   }
-  state.senderName = sender;
-  state.dadName = dad;
-  state.customMessage = message;
-  populateContent();
-  resetAllPages();
-  showScreen("screen-intro");
-});
 
-// ---------- discount preview (read-only; server re-checks before charging anything) ----------
-function updatePayButton() {
-  $("btnPay").textContent = state.finalAmount === 0 ? "Claim your free gift →" : "Pay ₹" + state.finalAmount + " & get link";
-}
-$("btnApplyDiscount").addEventListener("click", async () => {
-  const codeInput = $("inputDiscount").value.trim().toUpperCase();
-  const msgEl = $("discountMsg");
-  msgEl.className = "text-[0.82rem] mt-1.5 min-h-[1.2em]";
-  msgEl.textContent = "";
-  if (!codeInput) return;
   try {
-    const { data, error } = await sb.from("discount_codes").select("*").eq("code", codeInput).eq("active", true).maybeSingle();
+    const { data, error } = await sb.from("gifts").select("*").eq("id", giftId).eq("paid", true).maybeSingle();
     if (error) throw error;
     if (!data) {
-      msgEl.classList.add("text-[#B33B3B]");
-      msgEl.textContent = "That code isn't valid or has expired.";
-      $("discountSummaryRow").classList.add("hidden"); $("discountSummaryRow").classList.remove("flex");
-      state.discountCode = null; state.finalAmount = BASE_PRICE_RUPEES;
-      $("totalPriceLabel").textContent = "₹" + BASE_PRICE_RUPEES;
-      updatePayButton();
+      $("errorDetail").textContent = "This gift isn't ready yet — ask the sender to finish creating it.";
+      showScreen("screen-error");
       return;
     }
-    const discountAmt = Math.round(BASE_PRICE_RUPEES * data.percent_off / 100);
-    const finalAmount = Math.max(BASE_PRICE_RUPEES - discountAmt, 0);
-    state.discountCode = data.code; state.finalAmount = finalAmount;
-    $("discountSummaryRow").classList.remove("hidden"); $("discountSummaryRow").classList.add("flex");
-    $("discountLabel").textContent = `Discount (${data.code})`;
-    $("discountAmountLabel").textContent = "−₹" + discountAmt;
-    $("totalPriceLabel").textContent = finalAmount === 0 ? "FREE 🎉" : "₹" + finalAmount;
-    updatePayButton();
-    msgEl.classList.add("text-[#4F7A3D]");
-    msgEl.textContent = finalAmount === 0 ? "Applied! This one's on the house 🎉" : `Applied! ${data.percent_off}% off. The final price is always re-checked when you pay.`;
+    state.senderName = data.sender_name;
+    state.dadName = data.dad_name;
+    state.customMessage = data.custom_message;
+    state.photoUrl = data.photo_url;
+
+    populateContent();
+    resetAllPages();
+    showScreen("screen-intro");
   } catch (err) {
     console.error(err);
-    msgEl.classList.add("text-[#B33B3B]");
-    msgEl.textContent = "Couldn't check that code right now.";
+    $("errorDetail").textContent = "Something went wrong loading this gift. Please ask the sender for a fresh link.";
+    showScreen("screen-error");
   }
-});
-
-// ---------- payment: everything that matters happens inside the Edge Function ----------
-function giftPayload() {
-  return { sender_name: state.senderName, dad_name: state.dadName, custom_message: state.customMessage, photo_base64: state.photoDataUrl };
 }
-
-async function callCheckout(body) {
-  const { data, error } = await sb.functions.invoke("checkout", { body });
-  if (error) throw new Error(error.message || "Could not reach the payment service.");
-  if (data && data.error) throw new Error(data.error);
-  return data;
-}
-
-function finish(giftId) {
-  const link = `${location.origin}${location.pathname.replace(/index\.html$/, "")}view.html?gift=${giftId}`;
-  $("giftLinkInput").value = link;
-  if (navigator.share) $("btnShare").classList.remove("hidden");
-  showScreen("screen-success");
-}
-
-$("btnPay").addEventListener("click", async () => {
-  const errEl = $("paymentError");
-  const btn = $("btnPay");
-  errEl.textContent = "";
-  btn.disabled = true;
-  btn.textContent = "Setting things up…";
-  try {
-    const order = await callCheckout({ action: "create_order", discount_code: state.discountCode });
-
-    if (order.free) {
-      const result = await callCheckout({ action: "claim_free", discount_code: state.discountCode, gift: giftPayload() });
-      finish(result.gift_id);
-      btn.disabled = false; updatePayButton();
-      return;
-    }
-
-    if (!window.Razorpay) throw new Error("Payment couldn't load. Check your connection and try again.");
-
-    const rzp = new Razorpay({
-      key: order.key_id,
-      order_id: order.order_id,
-      amount: order.amount,
-      currency: "INR",
-      name: "A Father's Day Gift",
-      description: "For " + state.dadName,
-      theme: { color: "#8B4452" },
-      handler: async (response) => {
-        try {
-          const result = await callCheckout({
-            action: "verify_and_save",
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
-            discount_code: state.discountCode,
-            gift: giftPayload(),
-          });
-          finish(result.gift_id);
-        } catch (err) {
-          errEl.textContent = "Payment succeeded but saving your gift failed (" + err.message + "). Keep this payment ID for support: " + response.razorpay_payment_id;
-        } finally {
-          btn.disabled = false; updatePayButton();
-        }
-      },
-      modal: { ondismiss: () => { btn.disabled = false; updatePayButton(); } },
-    });
-    rzp.open();
-  } catch (err) {
-    console.error(err);
-    errEl.textContent = err.message || "Something went wrong.";
-    btn.disabled = false; updatePayButton();
-  }
-});
-
-$("btnCopyLink").addEventListener("click", async () => {
-  const input = $("giftLinkInput");
-  input.select();
-  try {
-    await navigator.clipboard.writeText(input.value);
-    $("btnCopyLink").textContent = "Copied!";
-    setTimeout(() => ($("btnCopyLink").textContent = "Copy"), 1500);
-  } catch {}
-});
-$("btnShare").addEventListener("click", () => {
-  navigator.share({ title: "A Father's Day gift", text: "I made you something for Father's Day 💛", url: $("giftLinkInput").value }).catch(() => {});
-});
-$("btnCreateAnother").addEventListener("click", () => location.reload());
-
-// ---------- init ----------
-spawnPetals();
-showScreen("screen-form");
+init();
 </script>
 </body>
 </html>
