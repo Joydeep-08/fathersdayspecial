@@ -3,204 +3,636 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>A Father's Day Gift</title>
+<title>Make a Father's Day Gift</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Quicksand:wght@500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          cream: '#FBF3EE',
+          creamdeep: '#F3E1D8',
+          rosedeep: '#8B4452',
+          rose: '#C97B86',
+          rosesoft: '#E8B4A0',
+          sage: '#93AC82',
+          lavender: '#B6A6C9',
+          peach: '#E3A47E',
+          ink: '#4A2F35',
+          inksoft: '#8A6D71',
+          gold: '#D7A24C',
+          paper: '#FFFDFB',
+        },
+        fontFamily: {
+          display: ['Fraunces', 'Georgia', 'serif'],
+          script: ['Caveat', 'cursive'],
+          body: ['Quicksand', 'system-ui', 'sans-serif'],
+        },
+        keyframes: {
+          drift: {
+            '0%': { transform: 'translateY(-10vh) rotate(0deg)', opacity: 0 },
+            '10%': { opacity: .55 },
+            '100%': { transform: 'translateY(110vh) rotate(220deg)', opacity: 0 },
+          },
+          flicker: {
+            '0%,100%': { transform: 'translateX(-50%) scale(1) rotate(-1deg)' },
+            '30%': { transform: 'translateX(-50%) scale(1.05,.95) rotate(2deg)' },
+            '60%': { transform: 'translateX(-50%) scale(.96,1.04) rotate(-2deg)' },
+          },
+          sway: {
+            '0%,100%': { transform: 'rotate(-3deg)' },
+            '50%': { transform: 'rotate(3deg)' },
+          },
+          popburst: {
+            '0%': { transform: 'scale(1)', opacity: 1 },
+            '60%': { transform: 'scale(1.25)', opacity: 1 },
+            '100%': { transform: 'scale(1.5)', opacity: 0 },
+          },
+          smokerise: {
+            '0%': { opacity: .55, transform: 'translate(-50%,0) scale(1)' },
+            '100%': { opacity: 0, transform: 'translate(-50%,-60px) scale(2.2)' },
+          },
+          fadein: {
+            from: { opacity: 0, transform: 'translateY(8px)' },
+            to: { opacity: 1, transform: 'none' },
+          },
+        },
+        animation: {
+          drift: 'drift 12s linear infinite',
+          flicker: 'flicker 2.4s ease-in-out infinite',
+          sway: 'sway 4.2s ease-in-out infinite',
+          popburst: 'popburst .35s ease-out forwards',
+          smokerise: 'smokerise 1.6s ease-out forwards',
+          fadein: 'fadein .5s ease both',
+        },
+      },
+    },
+  };
+</script>
+<style>
+  /* the one animation Tailwind's static utilities can't parametrize per-element (random fly direction) */
+  @keyframes confettifly { to { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity: 0; } }
+  .confetti-bit { animation: confettifly .7s ease-out forwards; }
+  @media (prefers-reduced-motion: reduce) {
+    .balloon-svg, .flame, .petal { animation: none !important; }
+  }
+</style>
 </head>
-<body>
+<body class="m-0 min-h-screen flex justify-center bg-gradient-to-br from-cream via-creamdeep to-rosesoft bg-fixed font-body text-ink relative overflow-x-hidden">
 
-<div class="petal-field" id="petalField"></div>
+<div id="petalField" class="fixed inset-0 pointer-events-none z-0 overflow-hidden"></div>
 
-<div class="app-shell" id="appShell">
+<div class="relative z-10 w-full max-w-[460px] min-h-screen sm:min-h-0 sm:my-[4vh] sm:rounded-[28px] bg-paper shadow-[0_18px_40px_-12px_rgba(139,68,82,0.28)] flex flex-col overflow-hidden">
 
-  <!-- progress dots (hidden on form / payment / success) -->
-  <div class="progress" id="progressDots" style="display:none;">
-    <div class="dot" data-step="1"></div>
-    <div class="dot" data-step="2"></div>
-    <div class="dot" data-step="3"></div>
-    <div class="dot" data-step="4"></div>
+  <!-- progress dots -->
+  <div id="progressDots" class="hidden justify-center gap-2.5 pt-[18px] pb-1">
+    <div class="dot w-2.5 h-[13px] rounded-full bg-[#E6D9D2] transition-all duration-300" data-step="1"></div>
+    <div class="dot w-2.5 h-[13px] rounded-full bg-[#E6D9D2] transition-all duration-300" data-step="2"></div>
+    <div class="dot w-2.5 h-[13px] rounded-full bg-[#E6D9D2] transition-all duration-300" data-step="3"></div>
+    <div class="dot w-2.5 h-[13px] rounded-full bg-[#E6D9D2] transition-all duration-300" data-step="4"></div>
   </div>
 
-  <!-- ============ SCREEN: loading ============ -->
-  <section class="screen active" id="screen-loading">
-    <div class="intro-card">
-      <div class="heart">🎈</div>
-      <p class="muted">Just a moment…</p>
-    </div>
-  </section>
+  <!-- ============ SCREEN: create form ============ -->
+  <section id="screen-form" class="screen flex flex-col flex-1 px-7 pt-8 pb-7 animate-fadein">
+    <div class="text-[0.72rem] tracking-[0.14em] uppercase text-inksoft mb-1.5">Father's Day Gift</div>
+    <h1 class="font-display text-[1.9rem] font-semibold text-rosedeep leading-tight mb-2">Make something<br>he'll keep forever</h1>
+    <p class="text-inksoft text-sm mb-5">Fill this in, preview it for free, then pay once you're happy with it.</p>
 
-  <!-- ============ SCREEN: create form (sender) ============ -->
-  <section class="screen" id="screen-form">
-    <div class="eyebrow">Father's Day Gift</div>
-    <h1>Make something<br>he'll keep forever</h1>
-    <p class="muted" style="margin-bottom:20px;">Fill this in, preview it, then send the link to your dad.</p>
-
-    <div class="field">
-      <label for="inputSender">Your name</label>
-      <input type="text" id="inputSender" maxlength="40" placeholder="e.g. Asha">
+    <div class="mb-4">
+      <label for="inputSender" class="block text-[0.82rem] font-bold text-rosedeep mb-1.5">Your name</label>
+      <input type="text" id="inputSender" maxlength="40" placeholder="e.g. Asha"
+        class="w-full border-[1.5px] border-[#E9D7CF] bg-cream rounded-2xl px-3.5 py-3 text-[0.96rem] text-ink focus:outline-none focus:border-rose">
     </div>
 
-    <div class="field">
-      <label for="inputDad">What you call your dad</label>
-      <input type="text" id="inputDad" maxlength="40" placeholder="e.g. Papa, Dad, Appa">
+    <div class="mb-4">
+      <label for="inputDad" class="block text-[0.82rem] font-bold text-rosedeep mb-1.5">What you call your dad</label>
+      <input type="text" id="inputDad" maxlength="40" placeholder="e.g. Papa, Dad, Appa"
+        class="w-full border-[1.5px] border-[#E9D7CF] bg-cream rounded-2xl px-3.5 py-3 text-[0.96rem] text-ink focus:outline-none focus:border-rose">
     </div>
 
-    <div class="field">
-      <label for="inputMessage">A small message for the last page</label>
-      <textarea id="inputMessage" rows="3" maxlength="280" placeholder="Something only the two of you would get…"></textarea>
-      <div class="char-count"><span id="msgCount">0</span>/280</div>
+    <div class="mb-4">
+      <label for="inputMessage" class="block text-[0.82rem] font-bold text-rosedeep mb-1.5">A small message for the last page</label>
+      <textarea id="inputMessage" rows="3" maxlength="280" placeholder="Something only the two of you would get…"
+        class="w-full resize-none border-[1.5px] border-[#E9D7CF] bg-cream rounded-2xl px-3.5 py-3 text-[0.96rem] text-ink focus:outline-none focus:border-rose"></textarea>
+      <div class="text-right text-[0.74rem] text-inksoft mt-1"><span id="msgCount">0</span>/280</div>
     </div>
 
-    <div class="field">
-      <label>A photo of the two of you <span class="muted" style="font-weight:500;">(optional)</span></label>
-      <div class="photo-upload" id="photoUpload">
-        <input type="file" id="inputPhoto" accept="image/*">
+    <div class="mb-4">
+      <label class="block text-[0.82rem] font-bold text-rosedeep mb-1.5">A photo of the two of you <span class="text-inksoft font-medium">(optional)</span></label>
+      <div class="relative overflow-hidden border-2 border-dashed border-[#E0C7BD] rounded-2xl p-4 text-center bg-cream cursor-pointer">
+        <input type="file" id="inputPhoto" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
         <div id="photoPlaceholder">
-          <div style="font-size:1.6rem;">📷</div>
-          <div class="hint">Tap to add a photo</div>
+          <div class="text-2xl">📷</div>
+          <div class="text-inksoft text-sm">Tap to add a photo</div>
         </div>
-        <img id="photoPreviewImg" style="display:none;">
+        <img id="photoPreviewImg" class="hidden w-full max-h-40 object-cover rounded-xl">
       </div>
     </div>
 
-    <div class="spacer"></div>
-    <div id="formError" class="discount-msg err"></div>
-    <button class="btn btn-primary btn-block" id="btnGoPreview">Preview the gift →</button>
+    <div class="flex-1"></div>
+    <div id="formError" class="text-[0.82rem] text-[#B33B3B] min-h-[1.2em] mb-1"></div>
+    <button id="btnGoPreview" class="w-full rounded-full px-6 py-3.5 font-bold text-[0.98rem] bg-rosedeep text-paper shadow-[0_10px_24px_-8px_rgba(139,68,82,0.55)] active:scale-[0.97] transition disabled:opacity-45 disabled:cursor-not-allowed">Preview the gift →</button>
   </section>
 
-  <!-- ============ SCREEN: intro gate (preview + recipient) ============ -->
-  <section class="screen" id="screen-intro">
-    <div class="intro-card">
-      <div class="heart">🎈💌</div>
-      <div class="eyebrow">A little something for</div>
-      <h1 id="introDadName">Dad</h1>
-      <p class="script" id="introFromName">from Asha</p>
-      <button class="btn btn-primary" id="btnOpenGift">Open it ❤</button>
-    </div>
+  <!-- ============ SCREEN: intro gate ============ -->
+  <section id="screen-intro" class="screen hidden flex-col flex-1 px-7 pt-8 pb-7 animate-fadein items-center justify-center text-center gap-4">
+    <div class="text-4xl">🎈💌</div>
+    <div class="text-[0.72rem] tracking-[0.14em] uppercase text-inksoft">A little something for</div>
+    <h1 id="introDadName" class="font-display text-[1.9rem] font-semibold text-rosedeep">Dad</h1>
+    <p id="introFromName" class="font-script text-2xl text-rosedeep">from Asha</p>
+    <button id="btnOpenGift" class="rounded-full px-6 py-3.5 font-bold bg-rosedeep text-paper shadow-[0_10px_24px_-8px_rgba(139,68,82,0.55)] active:scale-[0.97] transition">Open it ❤</button>
+    <p class="text-[0.76rem] text-inksoft mt-2">This is exactly what {dad} will see — nothing is sent or charged yet.</p>
   </section>
 
   <!-- ============ SCREEN: page 1 — candle ============ -->
-  <section class="screen" id="screen-p1">
-    <div class="stage">
-      <div class="eyebrow">Page one</div>
-      <h2 id="p1Headline">Make a wish</h2>
-      <p class="muted">Tap the flame to blow out the candle.</p>
-      <div class="candle-wrap">
-        <div class="smoke" id="candleSmoke"></div>
-        <div class="flame" id="candleFlame"></div>
-        <div class="wick"></div>
-        <div class="candle-body"></div>
-      </div>
-      <p class="candle-tap-hint" id="candleHint">👆 tap the flame</p>
-      <div class="wish-result" id="wishResult">
-        <p class="script">Wish granted ✨</p>
-        <p class="muted" id="wishFromLine">From Asha, with love.</p>
-        <button class="btn btn-primary" id="btnToP2">Open the next surprise →</button>
-      </div>
+  <section id="screen-p1" class="screen hidden flex-col flex-1 px-7 pt-8 pb-7 animate-fadein items-center justify-center text-center gap-5">
+    <div class="text-[0.72rem] tracking-[0.14em] uppercase text-inksoft">Page one</div>
+    <h2 id="p1Headline" class="font-display text-2xl font-semibold text-rosedeep">Make a wish</h2>
+    <p class="text-inksoft text-sm">Tap the flame to blow out the candle.</p>
+    <div class="relative w-[120px] h-[200px]">
+      <div id="candleSmoke" class="absolute bottom-[150px] left-1/2 -translate-x-1/2 w-3.5 h-[30px] rounded-full bg-gray-400/35 opacity-0 blur-[3px]"></div>
+      <div id="candleFlame" class="flame absolute bottom-[122px] left-1/2 -translate-x-1/2 w-[22px] h-[34px] rounded-[50%_50%_50%_50%/65%_65%_40%_40%] cursor-pointer animate-flicker"
+        style="background: radial-gradient(circle at 50% 70%, #FFF3C4 0%, #D7A24C 55%, #C9601F 100%);"></div>
+      <div class="absolute bottom-[110px] left-1/2 -translate-x-1/2 w-[3px] h-3.5 bg-[#5b4036] rounded-sm"></div>
+      <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[34px] h-[110px] rounded-md shadow-[inset_-4px_0_6px_rgba(0,0,0,0.08)]"
+        style="background: linear-gradient(180deg, #E8B4A0, #C97B86);"></div>
+    </div>
+    <p id="candleHint" class="text-[0.8rem] text-inksoft">👆 tap the flame</p>
+    <div id="wishResult" class="opacity-0 translate-y-2 transition-all duration-500">
+      <p class="font-script text-2xl text-rosedeep">Wish granted ✨</p>
+      <p id="wishFromLine" class="text-inksoft text-sm mb-3">From Asha, with love.</p>
+      <button id="btnToP2" class="rounded-full px-6 py-3.5 font-bold bg-rosedeep text-paper shadow-[0_10px_24px_-8px_rgba(139,68,82,0.55)] active:scale-[0.97] transition">Open the next surprise →</button>
     </div>
   </section>
 
-  <!-- ============ SCREEN: page 2 — one balloon + photo ============ -->
-  <section class="screen" id="screen-p2">
-    <div class="single-balloon-stage">
-      <div class="eyebrow">Page two</div>
-      <h2>Pop the balloon</h2>
-      <p class="muted">It's hiding something for you.</p>
-      <div id="p2BalloonHolder"></div>
-      <div class="photo-reveal" id="p2PhotoReveal">
-        <img id="p2PhotoImg" src="" alt="A memory">
-      </div>
-      <p class="photo-caption" id="p2Caption">A little memory from Asha</p>
-      <button class="btn btn-primary" id="btnToP3" style="display:none;">Keep going →</button>
+  <!-- ============ SCREEN: page 2 — balloon + photo ============ -->
+  <section id="screen-p2" class="screen hidden flex-col flex-1 px-7 pt-8 pb-7 animate-fadein items-center justify-center text-center gap-4">
+    <div class="text-[0.72rem] tracking-[0.14em] uppercase text-inksoft">Page two</div>
+    <h2 class="font-display text-2xl font-semibold text-rosedeep">Pop the balloon</h2>
+    <p class="text-inksoft text-sm">It's hiding something for you.</p>
+    <div id="p2BalloonHolder" class="relative"></div>
+    <div id="p2PhotoReveal" class="w-[220px] h-[220px] rounded-2xl overflow-hidden bg-cream shadow-[0_14px_30px_-10px_rgba(139,68,82,0.4)] opacity-0 scale-75 transition-all duration-500">
+      <img id="p2PhotoImg" class="w-full h-full object-cover block" src="" alt="A memory">
     </div>
+    <p id="p2Caption" class="font-script text-xl text-rosedeep opacity-0 transition-opacity duration-500 delay-200">A little memory from Asha</p>
+    <button id="btnToP3" class="hidden rounded-full px-6 py-3.5 font-bold bg-rosedeep text-paper shadow-[0_10px_24px_-8px_rgba(139,68,82,0.55)] active:scale-[0.97] transition">Keep going →</button>
   </section>
 
   <!-- ============ SCREEN: page 3 — letter ============ -->
-  <section class="screen" id="screen-p3">
-    <div class="eyebrow">Page three</div>
-    <div class="letter-card">
-      <h2 id="p3Greeting">Dear Dad,</h2>
-      <p id="p3Body"></p>
-      <div class="letter-signature" id="p3Signature">With all my heart, Asha</div>
+  <section id="screen-p3" class="screen hidden flex-col flex-1 px-7 pt-8 pb-7 animate-fadein">
+    <div class="text-[0.72rem] tracking-[0.14em] uppercase text-inksoft mb-2">Page three</div>
+    <div class="bg-cream rounded-2xl p-6 flex-1 flex flex-col justify-center shadow-[inset_0_0_0_1px_#EFDCD2]">
+      <h2 id="p3Greeting" class="font-display text-2xl font-semibold text-rosedeep">Dear Dad,</h2>
+      <p id="p3Body" class="leading-relaxed"></p>
+      <div id="p3Signature" class="mt-4 font-script text-2xl text-rosedeep">With all my heart, Asha</div>
     </div>
-    <button class="btn btn-primary btn-block" id="btnToP4" style="margin-top:18px;">One more thing →</button>
+    <button id="btnToP4" class="w-full mt-4 rounded-full px-6 py-3.5 font-bold bg-rosedeep text-paper shadow-[0_10px_24px_-8px_rgba(139,68,82,0.55)] active:scale-[0.97] transition">One more thing →</button>
   </section>
 
-  <!-- ============ SCREEN: page 4 — 4 balloons + message ============ -->
-  <section class="screen" id="screen-p4">
-    <div class="eyebrow">Page four</div>
-    <h2>Pop all 4 balloons</h2>
-    <div class="word-bar" id="wordBar">
-      <span class="blank">_____</span><span class="blank">_____</span><span class="blank">_____</span><span class="blank">_____</span>
+  <!-- ============ SCREEN: page 4 — 4 balloons ============ -->
+  <section id="screen-p4" class="screen hidden flex-col flex-1 px-7 pt-8 pb-7 animate-fadein">
+    <div class="text-[0.72rem] tracking-[0.14em] uppercase text-inksoft mb-2">Page four</div>
+    <h2 class="font-display text-2xl font-semibold text-rosedeep mb-2">Pop all 4 balloons</h2>
+    <div id="wordBar" class="flex justify-center gap-2.5 flex-wrap font-script text-2xl text-rosedeep min-h-[40px] mb-2"></div>
+    <div id="p4BalloonGrid" class="grid grid-cols-2 gap-4 justify-center my-3"></div>
+    <div id="p4FinalMessage" class="bg-cream rounded-2xl p-5 text-center opacity-0 translate-y-2.5 transition-all duration-500 mt-1.5">
+      <p id="p4CustomText" class="text-[1.05rem]"></p>
+      <div id="p4Signature" class="mt-1.5 font-script text-2xl text-rosedeep">— Asha</div>
+      <p class="font-script text-xl text-rosedeep mt-1.5">Happy Father's Day 🎈</p>
     </div>
-    <div class="balloon-grid" id="p4BalloonGrid"></div>
-    <div class="final-message" id="p4FinalMessage">
-      <p id="p4CustomText" style="font-size:1.05rem;"></p>
-      <div class="letter-signature" id="p4Signature">— Asha</div>
-      <p class="script" style="margin-top:6px;">Happy Father's Day 🎈</p>
-    </div>
-    <div class="spacer"></div>
-    <button class="btn btn-primary btn-block" id="btnToPayment" style="display:none;">Continue to payment →</button>
-    <button class="btn btn-ghost btn-block" id="btnReplay" style="display:none; margin-top:10px;">Replay from the start</button>
+    <div class="flex-1"></div>
+    <button id="btnToPayment" class="hidden w-full rounded-full px-6 py-3.5 font-bold bg-rosedeep text-paper shadow-[0_10px_24px_-8px_rgba(139,68,82,0.55)] active:scale-[0.97] transition">Continue to payment →</button>
   </section>
 
-  <!-- ============ SCREEN: payment (sender only) ============ -->
-  <section class="screen" id="screen-payment">
-    <div class="banner-preview">YOU'RE THE ONLY ONE WHO SEES THIS SCREEN</div>
-    <div style="padding-top:24px;">
-      <div class="eyebrow">Last step</div>
-      <h2 id="paymentHeadline">Send this to Dad</h2>
-      <p class="muted">Pay once, get a private link you can share anywhere.</p>
+  <!-- ============ SCREEN: payment ============ -->
+  <section id="screen-payment" class="screen hidden flex-col flex-1 animate-fadein">
+    <div class="bg-rosedeep text-paper text-center text-[0.78rem] font-bold tracking-wide py-2">YOU'RE THE ONLY ONE WHO SEES THIS SCREEN</div>
+    <div class="px-7 pt-6 pb-7 flex flex-col flex-1">
+      <div class="text-[0.72rem] tracking-[0.14em] uppercase text-inksoft mb-1.5">Last step</div>
+      <h2 id="paymentHeadline" class="font-display text-2xl font-semibold text-rosedeep mb-1.5">Send this to Dad</h2>
+      <p class="text-inksoft text-sm mb-4">Pay once, get a private link you can share anywhere.</p>
 
-      <div class="summary-card">
-        <div class="summary-row"><span>Personalised gift experience</span><span id="basePriceLabel">₹99</span></div>
-        <div class="summary-row" id="discountSummaryRow" style="display:none;">
+      <div class="bg-cream rounded-2xl p-4.5 p-[18px] mb-4">
+        <div class="flex justify-between text-[0.95rem] py-1.5"><span>Personalised gift experience</span><span id="basePriceLabel">₹99</span></div>
+        <div id="discountSummaryRow" class="hidden justify-between text-[0.95rem] py-1.5">
           <span id="discountLabel">Discount</span><span id="discountAmountLabel">−₹0</span>
         </div>
-        <div class="summary-row total"><span>Total</span><span id="totalPriceLabel">₹99</span></div>
-
-        <div class="discount-row">
-          <input type="text" id="inputDiscount" placeholder="Discount code">
-          <button class="btn btn-ghost" id="btnApplyDiscount">Apply</button>
+        <div class="flex justify-between font-bold text-rosedeep border-t border-dashed border-[#E0C7BD] mt-1.5 pt-2.5">
+          <span>Total</span><span id="totalPriceLabel">₹99</span>
         </div>
-        <div class="discount-msg" id="discountMsg"></div>
+
+        <div class="flex gap-2 mt-3.5">
+          <input type="text" id="inputDiscount" placeholder="Discount code"
+            class="flex-1 border-[1.5px] border-[#E9D7CF] rounded-2xl px-3 py-2.5 bg-paper focus:outline-none focus:border-rose">
+          <button id="btnApplyDiscount" class="rounded-full px-5 py-2.5 font-bold text-rosedeep border-[1.5px] border-rosesoft active:scale-[0.97] transition">Apply</button>
+        </div>
+        <div id="discountMsg" class="text-[0.82rem] mt-1.5 min-h-[1.2em]"></div>
       </div>
 
-      <div id="paymentError" class="discount-msg err"></div>
-      <button class="btn btn-primary btn-block" id="btnPay">Pay ₹99 &amp; get link</button>
-      <p class="footer-note">Secure checkout via Razorpay.</p>
+      <div id="paymentError" class="text-[0.82rem] text-[#B33B3B] min-h-[1.2em] mb-1"></div>
+      <button id="btnPay" class="w-full rounded-full px-6 py-3.5 font-bold bg-rosedeep text-paper shadow-[0_10px_24px_-8px_rgba(139,68,82,0.55)] active:scale-[0.97] transition disabled:opacity-45 disabled:cursor-not-allowed">Pay ₹99 &amp; get link</button>
+      <p class="text-center text-[0.76rem] text-inksoft mt-3">Secure checkout via Razorpay. Your gift is only saved after payment is verified.</p>
     </div>
   </section>
 
-  <!-- ============ SCREEN: success (sender only) ============ -->
-  <section class="screen" id="screen-success">
-    <div class="intro-card">
-      <div class="heart">🎉</div>
-      <h2>All set!</h2>
-      <p class="muted">Share this link with <span id="successDadName">Dad</span>:</p>
-      <div class="link-box">
-        <input type="text" id="giftLinkInput" readonly>
-        <button class="btn btn-ghost" id="btnCopyLink">Copy</button>
-      </div>
-      <button class="btn btn-primary btn-block" id="btnShare" style="display:none;">Share link</button>
-      <button class="btn btn-ghost" id="btnCreateAnother" style="margin-top:6px;">Create another gift</button>
+  <!-- ============ SCREEN: success ============ -->
+  <section id="screen-success" class="screen hidden flex-col flex-1 px-7 pt-8 pb-7 animate-fadein items-center justify-center text-center gap-2">
+    <div class="text-4xl">🎉</div>
+    <h2 class="font-display text-2xl font-semibold text-rosedeep">All set!</h2>
+    <p class="text-inksoft text-sm">Share this link with <span id="successDadName">Dad</span>:</p>
+    <div class="flex items-center gap-2 bg-cream rounded-2xl px-3 py-2.5 my-3 w-full">
+      <input type="text" id="giftLinkInput" readonly class="flex-1 border-none bg-transparent text-[0.85rem] text-ink focus:outline-none">
+      <button id="btnCopyLink" class="rounded-full px-4 py-2 font-bold text-rosedeep border-[1.5px] border-rosesoft active:scale-[0.97] transition shrink-0">Copy</button>
     </div>
-  </section>
-
-  <!-- ============ SCREEN: error (bad/expired link) ============ -->
-  <section class="screen" id="screen-error">
-    <div class="intro-card">
-      <div class="heart">💔</div>
-      <h2>Hmm, this link isn't ready</h2>
-      <p class="muted" id="errorDetail">This gift may still be in progress, or the link is incomplete.</p>
-    </div>
+    <button id="btnShare" class="hidden w-full rounded-full px-6 py-3.5 font-bold bg-rosedeep text-paper shadow-[0_10px_24px_-8px_rgba(139,68,82,0.55)] active:scale-[0.97] transition">Share link</button>
+    <button id="btnCreateAnother" class="rounded-full px-6 py-3 font-bold text-rosedeep border-[1.5px] border-rosesoft active:scale-[0.97] transition mt-1.5">Create another gift</button>
   </section>
 
 </div>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script src="app.js"></script>
+<script>
+/* ===================================================================
+   Father's Day Gift — sender app
+   Nothing touches the database until payment is verified server-side.
+   The Supabase anon key used here can only ever SELECT (see setup.sql);
+   all writes happen inside the "checkout" Edge Function with the
+   service-role key, after it has verified the Razorpay signature itself.
+=================================================================== */
+const SUPABASE_URL = "https://iliakhaufgpjjtwamisn.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsaWFraGF1Zmdwamp0d2FtaXNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NTU0NTMsImV4cCI6MjA5NjQzMTQ1M30.nim8jt-cUhb3IIWjnd0FC3NF6xS_gg8RelBBJG1bIno";
+const BASE_PRICE_RUPEES = 99;
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = (id) => document.getElementById(id);
+
+const state = {
+  senderName: "", dadName: "", customMessage: "",
+  photoDataUrl: null,
+  finalAmount: BASE_PRICE_RUPEES,
+  discountCode: null,
+};
+
+// ---------- screen plumbing ----------
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach((s) => s.classList.add("hidden"));
+  const el = $(id);
+  el.classList.remove("hidden");
+  el.classList.add("flex");
+  $("progressDots").classList.toggle("flex", ["screen-p1","screen-p2","screen-p3","screen-p4"].includes(id));
+  $("progressDots").classList.toggle("hidden", !["screen-p1","screen-p2","screen-p3","screen-p4"].includes(id));
+}
+function setProgress(step) {
+  document.querySelectorAll(".progress, #progressDots .dot").forEach((dot) => {
+    const s = Number(dot.dataset.step);
+    dot.classList.toggle("bg-rose", s < step);
+    dot.classList.toggle("scale-110", s < step);
+    dot.classList.toggle("bg-rosedeep", s === step);
+    dot.classList.toggle("scale-125", s === step);
+  });
+}
+
+function spawnPetals() {
+  const field = $("petalField");
+  const colors = ["#E8B4A0", "#C97B86", "#B6A6C9"];
+  for (let i = 0; i < 14; i++) {
+    const p = document.createElement("div");
+    p.className = "petal absolute w-2 h-2 rounded-[50%_0_50%_50%] opacity-50 animate-drift";
+    p.style.left = Math.random() * 100 + "vw";
+    p.style.background = colors[i % colors.length];
+    p.style.animationDelay = Math.random() * 14 + "s";
+    p.style.animationDuration = 10 + Math.random() * 10 + "s";
+    field.appendChild(p);
+  }
+}
+
+function confettiBurst(originEl, colors) {
+  const rect = originEl.getBoundingClientRect();
+  const host = document.createElement("div");
+  host.className = "fixed inset-0 pointer-events-none z-[999]";
+  document.body.appendChild(host);
+  for (let i = 0; i < 14; i++) {
+    const bit = document.createElement("div");
+    bit.className = "confetti-bit fixed w-1.5 h-1.5 rounded-sm";
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 40 + Math.random() * 60;
+    bit.style.setProperty("--dx", Math.cos(angle) * dist + "px");
+    bit.style.setProperty("--dy", Math.sin(angle) * dist + "px");
+    bit.style.setProperty("--rot", Math.random() * 360 + "deg");
+    bit.style.background = colors[i % colors.length];
+    bit.style.left = rect.left + rect.width / 2 + "px";
+    bit.style.top = rect.top + rect.height / 2 + "px";
+    host.appendChild(bit);
+  }
+  setTimeout(() => host.remove(), 800);
+}
+
+// ---------- balloons ----------
+function balloonSvgMarkup(color) {
+  return `
+  <svg class="balloon-svg animate-sway" width="100" height="160" viewBox="0 0 100 160" xmlns="http://www.w3.org/2000/svg" style="transform-origin:top center;">
+    <ellipse cx="50" cy="58" rx="42" ry="50" fill="${color}"/>
+    <ellipse cx="36" cy="38" rx="12" ry="16" fill="#ffffff" opacity="0.25"/>
+    <polygon points="44,104 56,104 50,116" fill="${color}"/>
+    <path d="M50 116 C 60 130, 40 140, 50 160" stroke="#C9B8AE" stroke-width="2" fill="none"/>
+  </svg>`;
+}
+function makeBalloon(containerEl, color) {
+  const wrap = document.createElement("div");
+  wrap.className = "balloon-wrap relative cursor-pointer";
+  wrap.style.webkitTapHighlightColor = "transparent";
+  wrap.innerHTML = balloonSvgMarkup(color);
+  containerEl.appendChild(wrap);
+  return wrap;
+}
+function popBalloon(wrap, color, onDone) {
+  if (wrap.dataset.popped) return;
+  wrap.dataset.popped = "1";
+  wrap.querySelector(".balloon-svg").classList.remove("animate-sway");
+  wrap.querySelector(".balloon-svg").classList.add("animate-popburst");
+  confettiBurst(wrap, [color, "#ffffff"]);
+  setTimeout(() => { wrap.style.visibility = "hidden"; onDone && onDone(); }, 320);
+}
+
+// ---------- copy ----------
+function letterBody(dadName, senderName) {
+  return `Thank you for the quiet sacrifices, the steady hands, and the lessons you never made a big deal of. Every ride to nowhere in particular, every time you simply stayed — it shaped who I am today. ${senderName} just wanted you to know, today and always, how loved and appreciated you are, ${dadName}.`;
+}
+
+function populateContent() {
+  const { dadName, senderName, customMessage, photoDataUrl } = state;
+  $("introDadName").textContent = dadName;
+  $("introFromName").textContent = "from " + senderName;
+  $("p1Headline").textContent = "Make a wish, " + dadName;
+  $("wishFromLine").textContent = "From " + senderName + ", with love.";
+  $("p2Caption").textContent = "A little memory from " + senderName;
+  $("p2PhotoImg").src = photoDataUrl || "";
+  $("p3Greeting").textContent = "Dear " + dadName + ",";
+  $("p3Body").textContent = letterBody(dadName, senderName);
+  $("p3Signature").textContent = "With all my heart, " + senderName;
+  $("p4CustomText").textContent = customMessage;
+  $("p4Signature").textContent = "— " + senderName;
+  $("paymentHeadline").textContent = "Send this to " + dadName;
+  $("successDadName").textContent = dadName;
+}
+
+// ---------- page resets ----------
+function resetPage1() {
+  $("candleFlame").classList.remove("opacity-0","scale-0");
+  $("candleFlame").classList.add("animate-flicker");
+  $("candleSmoke").classList.remove("opacity-55");
+  $("wishResult").classList.add("opacity-0","translate-y-2");
+  $("wishResult").classList.remove("opacity-100","translate-y-0");
+  $("candleHint").style.display = "block";
+}
+function resetPage2() {
+  $("p2BalloonHolder").innerHTML = "";
+  $("p2PhotoReveal").classList.remove("opacity-100","scale-100");
+  $("p2PhotoReveal").classList.add("opacity-0","scale-75");
+  $("p2Caption").classList.remove("opacity-100");
+  $("btnToP3").classList.add("hidden");
+  const balloon = makeBalloon($("p2BalloonHolder"), "#E8B4A0");
+  balloon.addEventListener("click", () => {
+    popBalloon(balloon, "#E8B4A0", () => {
+      $("p2PhotoReveal").classList.add("opacity-100","scale-100");
+      $("p2PhotoReveal").classList.remove("opacity-0","scale-75");
+      $("p2Caption").classList.add("opacity-100");
+      $("btnToP3").classList.remove("hidden");
+    });
+  });
+}
+const PAGE4_WORDS = ["You", "are", "my", "hero"];
+const PAGE4_COLORS = ["#93AC82", "#B6A6C9", "#C97B86", "#E3A47E"];
+function resetPage4() {
+  $("p4BalloonGrid").innerHTML = "";
+  $("p4FinalMessage").classList.remove("opacity-100","translate-y-0");
+  $("p4FinalMessage").classList.add("opacity-0","translate-y-2.5");
+  $("btnToPayment").classList.add("hidden");
+  const wordBar = $("wordBar");
+  wordBar.innerHTML = PAGE4_WORDS.map(() => '<span class="text-[#D8C3BB]">_____</span>').join("");
+  let poppedCount = 0;
+  PAGE4_WORDS.forEach((word, i) => {
+    const balloon = makeBalloon($("p4BalloonGrid"), PAGE4_COLORS[i]);
+    balloon.classList.add("justify-self-center");
+    balloon.addEventListener("click", () => {
+      popBalloon(balloon, PAGE4_COLORS[i], () => {
+        const slot = wordBar.children[i];
+        slot.textContent = word;
+        slot.classList.remove("text-[#D8C3BB]");
+        poppedCount++;
+        if (poppedCount === PAGE4_WORDS.length) {
+          $("p4FinalMessage").classList.add("opacity-100","translate-y-0");
+          $("btnToPayment").classList.remove("hidden");
+        }
+      });
+    });
+  });
+}
+function resetAllPages() { resetPage1(); resetPage2(); resetPage4(); }
+
+// ---------- navigation ----------
+$("candleFlame").addEventListener("click", () => {
+  if ($("candleFlame").classList.contains("opacity-0")) return;
+  $("candleFlame").classList.remove("animate-flicker");
+  $("candleFlame").classList.add("opacity-0","scale-0");
+  $("candleSmoke").classList.add("opacity-55");
+  $("candleHint").style.display = "none";
+  setTimeout(() => { $("wishResult").classList.remove("opacity-0","translate-y-2"); $("wishResult").classList.add("opacity-100","translate-y-0"); }, 350);
+});
+$("btnToP2").addEventListener("click", () => { showScreen("screen-p2"); setProgress(2); });
+$("btnToP3").addEventListener("click", () => { showScreen("screen-p3"); setProgress(3); });
+$("btnToP4").addEventListener("click", () => { showScreen("screen-p4"); setProgress(4); });
+$("btnOpenGift").addEventListener("click", () => { showScreen("screen-p1"); setProgress(1); });
+$("btnToPayment").addEventListener("click", () => { showScreen("screen-payment"); });
+
+// ---------- form: compress photo, validate, go straight to preview (no DB writes) ----------
+function compressImage(file, maxDim = 1000, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxDim) { height = Math.round(height * maxDim / width); width = maxDim; }
+        else if (height > maxDim) { width = Math.round(width * maxDim / height); height = maxDim; }
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+$("inputMessage").addEventListener("input", (e) => { $("msgCount").textContent = e.target.value.length; });
+
+$("inputPhoto").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const dataUrl = await compressImage(file);
+    state.photoDataUrl = dataUrl;
+    $("photoPreviewImg").src = dataUrl;
+    $("photoPreviewImg").classList.remove("hidden");
+    $("photoPlaceholder").style.display = "none";
+  } catch {
+    $("formError").textContent = "Couldn't read that photo — try a different file.";
+  }
+});
+
+$("btnGoPreview").addEventListener("click", () => {
+  const sender = $("inputSender").value.trim();
+  const dad = $("inputDad").value.trim();
+  const message = $("inputMessage").value.trim();
+  const errEl = $("formError");
+  errEl.textContent = "";
+  if (!sender || !dad || !message) {
+    errEl.textContent = "Please fill in your name, dad's name, and a short message.";
+    return;
+  }
+  state.senderName = sender;
+  state.dadName = dad;
+  state.customMessage = message;
+  populateContent();
+  resetAllPages();
+  showScreen("screen-intro");
+});
+
+// ---------- discount preview (read-only; server re-checks before charging anything) ----------
+function updatePayButton() {
+  $("btnPay").textContent = state.finalAmount === 0 ? "Claim your free gift →" : "Pay ₹" + state.finalAmount + " & get link";
+}
+$("btnApplyDiscount").addEventListener("click", async () => {
+  const codeInput = $("inputDiscount").value.trim().toUpperCase();
+  const msgEl = $("discountMsg");
+  msgEl.className = "text-[0.82rem] mt-1.5 min-h-[1.2em]";
+  msgEl.textContent = "";
+  if (!codeInput) return;
+  try {
+    const { data, error } = await sb.from("discount_codes").select("*").eq("code", codeInput).eq("active", true).maybeSingle();
+    if (error) throw error;
+    if (!data) {
+      msgEl.classList.add("text-[#B33B3B]");
+      msgEl.textContent = "That code isn't valid or has expired.";
+      $("discountSummaryRow").classList.add("hidden"); $("discountSummaryRow").classList.remove("flex");
+      state.discountCode = null; state.finalAmount = BASE_PRICE_RUPEES;
+      $("totalPriceLabel").textContent = "₹" + BASE_PRICE_RUPEES;
+      updatePayButton();
+      return;
+    }
+    const discountAmt = Math.round(BASE_PRICE_RUPEES * data.percent_off / 100);
+    const finalAmount = Math.max(BASE_PRICE_RUPEES - discountAmt, 0);
+    state.discountCode = data.code; state.finalAmount = finalAmount;
+    $("discountSummaryRow").classList.remove("hidden"); $("discountSummaryRow").classList.add("flex");
+    $("discountLabel").textContent = `Discount (${data.code})`;
+    $("discountAmountLabel").textContent = "−₹" + discountAmt;
+    $("totalPriceLabel").textContent = finalAmount === 0 ? "FREE 🎉" : "₹" + finalAmount;
+    updatePayButton();
+    msgEl.classList.add("text-[#4F7A3D]");
+    msgEl.textContent = finalAmount === 0 ? "Applied! This one's on the house 🎉" : `Applied! ${data.percent_off}% off. The final price is always re-checked when you pay.`;
+  } catch (err) {
+    console.error(err);
+    msgEl.classList.add("text-[#B33B3B]");
+    msgEl.textContent = "Couldn't check that code right now.";
+  }
+});
+
+// ---------- payment: everything that matters happens inside the Edge Function ----------
+function giftPayload() {
+  return { sender_name: state.senderName, dad_name: state.dadName, custom_message: state.customMessage, photo_base64: state.photoDataUrl };
+}
+
+async function callCheckout(body) {
+  const { data, error } = await sb.functions.invoke("checkout", { body });
+  if (error) throw new Error(error.message || "Could not reach the payment service.");
+  if (data && data.error) throw new Error(data.error);
+  return data;
+}
+
+function finish(giftId) {
+  const link = `${location.origin}${location.pathname.replace(/index\.html$/, "")}view.html?gift=${giftId}`;
+  $("giftLinkInput").value = link;
+  if (navigator.share) $("btnShare").classList.remove("hidden");
+  showScreen("screen-success");
+}
+
+$("btnPay").addEventListener("click", async () => {
+  const errEl = $("paymentError");
+  const btn = $("btnPay");
+  errEl.textContent = "";
+  btn.disabled = true;
+  btn.textContent = "Setting things up…";
+  try {
+    const order = await callCheckout({ action: "create_order", discount_code: state.discountCode });
+
+    if (order.free) {
+      const result = await callCheckout({ action: "claim_free", discount_code: state.discountCode, gift: giftPayload() });
+      finish(result.gift_id);
+      btn.disabled = false; updatePayButton();
+      return;
+    }
+
+    if (!window.Razorpay) throw new Error("Payment couldn't load. Check your connection and try again.");
+
+    const rzp = new Razorpay({
+      key: order.key_id,
+      order_id: order.order_id,
+      amount: order.amount,
+      currency: "INR",
+      name: "A Father's Day Gift",
+      description: "For " + state.dadName,
+      theme: { color: "#8B4452" },
+      handler: async (response) => {
+        try {
+          const result = await callCheckout({
+            action: "verify_and_save",
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            discount_code: state.discountCode,
+            gift: giftPayload(),
+          });
+          finish(result.gift_id);
+        } catch (err) {
+          errEl.textContent = "Payment succeeded but saving your gift failed (" + err.message + "). Keep this payment ID for support: " + response.razorpay_payment_id;
+        } finally {
+          btn.disabled = false; updatePayButton();
+        }
+      },
+      modal: { ondismiss: () => { btn.disabled = false; updatePayButton(); } },
+    });
+    rzp.open();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || "Something went wrong.";
+    btn.disabled = false; updatePayButton();
+  }
+});
+
+$("btnCopyLink").addEventListener("click", async () => {
+  const input = $("giftLinkInput");
+  input.select();
+  try {
+    await navigator.clipboard.writeText(input.value);
+    $("btnCopyLink").textContent = "Copied!";
+    setTimeout(() => ($("btnCopyLink").textContent = "Copy"), 1500);
+  } catch {}
+});
+$("btnShare").addEventListener("click", () => {
+  navigator.share({ title: "A Father's Day gift", text: "I made you something for Father's Day 💛", url: $("giftLinkInput").value }).catch(() => {});
+});
+$("btnCreateAnother").addEventListener("click", () => location.reload());
+
+// ---------- init ----------
+spawnPetals();
+showScreen("screen-form");
+</script>
 </body>
 </html>
