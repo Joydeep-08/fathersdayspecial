@@ -8,10 +8,8 @@
 =================================================================== */
 
 // ---------- CONFIG ----------
-const SUPABASE_URL = "https://wbfuquzevipaglrddvur.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndiZnVxdXpldmlwYWdscmRkdnVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3NTgyNjEsImV4cCI6MjA5NzMzNDI2MX0.jawEk2_OGwinPik7mOk5d90B_DMeiwsrT1SsB0CNBdU";
-
-// TODO: replace with your real Razorpay Key ID (Dashboard → Settings → API Keys)
+const SUPABASE_URL = "https://iliakhaufgpjjtwamisn.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsaWFraGF1Zmdwamp0d2FtaXNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NTU0NTMsImV4cCI6MjA5NjQzMTQ1M30.nim8jt-cUhb3IIWjnd0FC3NF6xS_gg8RelBBJG1bIno";// TODO: replace with your real Razorpay Key ID (Dashboard → Settings → API Keys)
 const RAZORPAY_KEY_ID = "rzp_live_Sz9gct8RO5E1jB";
 
 const BASE_PRICE_RUPEES = 99;
