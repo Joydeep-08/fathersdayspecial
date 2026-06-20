@@ -233,7 +233,7 @@
 
       <div id="paymentError" class="text-[0.82rem] text-[#B33B3B] min-h-[1.2em] mb-1"></div>
       <button id="btnPay" class="w-full rounded-full px-6 py-3.5 font-bold bg-rosedeep text-paper shadow-[0_10px_24px_-8px_rgba(139,68,82,0.55)] active:scale-[0.97] transition disabled:opacity-45 disabled:cursor-not-allowed">Pay ₹99 &amp; get link</button>
-      <p class="text-center text-[0.76rem] text-inksoft mt-3">Secure checkout via Razorpay. Your gift is only saved after payment is verified.</p>
+      <p class="text-center text-[0.76rem] text-inksoft mt-3">Checkout via Razorpay.</p>
     </div>
   </section>
 
@@ -257,21 +257,31 @@
 <script>
 /* ===================================================================
    Father's Day Gift — sender app
-   Nothing touches the database until payment is verified server-side.
-   The Supabase anon key used here can only ever SELECT (see setup.sql);
-   all writes happen inside the "checkout" Edge Function with the
-   service-role key, after it has verified the Razorpay signature itself.
+   CLIENT-ONLY FLOW: the browser uploads photos straight to Storage and
+   writes/updates the gift row directly using the anon key. "paid" is
+   set client-side once Razorpay's handler fires — there is no server
+   that verifies a signature or an order. That means anyone who copies
+   the anon key out of this page's source (it's already public) and a
+   gift id could PATCH paid=true themselves without ever paying. Fine
+   for a low-stakes personal project; swap back to the Edge-Function
+   flow if you want that closed.
+   RLS on `gifts` (and the storage bucket) must allow anon insert +
+   update for this to work — see the updated setup.sql.
 =================================================================== */
 const SUPABASE_URL = "https://iliakhaufgpjjtwamisn.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsaWFraGF1Zmdwamp0d2FtaXNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NTU0NTMsImV4cCI6MjA5NjQzMTQ1M30.nim8jt-cUhb3IIWjnd0FC3NF6xS_gg8RelBBJG1bIno";
+// Razorpay PUBLISHABLE key id (starts rzp_live_ or rzp_test_) — this one is
+// meant to be public, it's not the secret. Get it from Razorpay Dashboard → Settings → API Keys.
+const RAZORPAY_KEY_ID = "rzp_live_Sz9gct8RO5E1jB";
 const BASE_PRICE_RUPEES = 99;
+const PHOTO_BUCKET = "gift-photos";
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = (id) => document.getElementById(id);
 
 const state = {
   senderName: "", dadName: "", customMessage: "",
-  photoDataUrl: null,
+  photoUrl: null,
   finalAmount: BASE_PRICE_RUPEES,
   discountCode: null,
 };
@@ -363,13 +373,13 @@ function letterBody(dadName, senderName) {
 }
 
 function populateContent() {
-  const { dadName, senderName, customMessage, photoDataUrl } = state;
+  const { dadName, senderName, customMessage, photoUrl } = state;
   $("introDadName").textContent = dadName;
   $("introFromName").textContent = "from " + senderName;
   $("p1Headline").textContent = "Make a wish, " + dadName;
   $("wishFromLine").textContent = "From " + senderName + ", with love.";
   $("p2Caption").textContent = "A little memory from " + senderName;
-  $("p2PhotoImg").src = photoDataUrl || "";
+  $("p2PhotoImg").src = photoUrl || "";
   $("p3Greeting").textContent = "Dear " + dadName + ",";
   $("p3Body").textContent = letterBody(dadName, senderName);
   $("p3Signature").textContent = "With all my heart, " + senderName;
@@ -473,17 +483,37 @@ function compressImage(file, maxDim = 1000, quality = 0.82) {
 
 $("inputMessage").addEventListener("input", (e) => { $("msgCount").textContent = e.target.value.length; });
 
+async function uploadPhotoToStorage(dataUrl) {
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  const fileName = `gift-${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+  const { error } = await sb.storage.from(PHOTO_BUCKET).upload(fileName, blob, {
+    contentType: "image/jpeg",
+    upsert: true,
+  });
+  if (error) throw error;
+  const { data } = sb.storage.from(PHOTO_BUCKET).getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
 $("inputPhoto").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
+  const placeholder = $("photoPlaceholder");
+  const placeholderHTML = placeholder.innerHTML;
+  $("formError").textContent = "";
   try {
+    placeholder.innerHTML = '<div class="text-2xl">⏳</div><div class="text-inksoft text-sm">Uploading…</div>';
     const dataUrl = await compressImage(file);
-    state.photoDataUrl = dataUrl;
-    $("photoPreviewImg").src = dataUrl;
+    const publicUrl = await uploadPhotoToStorage(dataUrl);
+    state.photoUrl = publicUrl;
+    $("photoPreviewImg").src = publicUrl;
     $("photoPreviewImg").classList.remove("hidden");
-    $("photoPlaceholder").style.display = "none";
-  } catch {
-    $("formError").textContent = "Couldn't read that photo — try a different file.";
+    placeholder.style.display = "none";
+  } catch (err) {
+    console.error(err);
+    placeholder.innerHTML = placeholderHTML;
+    $("formError").textContent = "Couldn't upload that photo — try a different file.";
   }
 });
 
@@ -544,16 +574,16 @@ $("btnApplyDiscount").addEventListener("click", async () => {
   }
 });
 
-// ---------- payment: everything that matters happens inside the Edge Function ----------
-function giftPayload() {
-  return { sender_name: state.senderName, dad_name: state.dadName, custom_message: state.customMessage, photo_base64: state.photoDataUrl };
-}
-
-async function callCheckout(body) {
-  const { data, error } = await sb.functions.invoke("checkout", { body });
-  if (error) throw new Error(error.message || "Could not reach the payment service.");
-  if (data && data.error) throw new Error(data.error);
-  return data;
+// ---------- payment: client writes directly to Supabase, no Edge Function ----------
+function giftRow() {
+  return {
+    id: crypto.randomUUID(),
+    sender_name: state.senderName,
+    dad_name: state.dadName,
+    custom_message: state.customMessage,
+    photo_url: state.photoUrl,
+    paid: false,
+  };
 }
 
 function finish(giftId) {
@@ -569,37 +599,46 @@ $("btnPay").addEventListener("click", async () => {
   errEl.textContent = "";
   btn.disabled = true;
   btn.textContent = "Setting things up…";
-  try {
-    const order = await callCheckout({ action: "create_order", discount_code: state.discountCode });
 
-    if (order.free) {
-      const result = await callCheckout({ action: "claim_free", discount_code: state.discountCode, gift: giftPayload() });
-      finish(result.gift_id);
+  try {
+    const row = giftRow();
+    const { data: inserted, error: insertErr } = await sb.from("gifts").insert(row).select().single();
+    if (insertErr) throw new Error(insertErr.message || "Couldn't save your gift.");
+    const giftId = inserted.id;
+
+    // Free via 100%-off discount code — skip Razorpay entirely
+    if (state.finalAmount === 0) {
+      const { error: updateErr } = await sb.from("gifts")
+        .update({ paid: true, amount_paid: 0, discount_code: state.discountCode })
+        .eq("id", giftId);
+      if (updateErr) throw new Error(updateErr.message || "Couldn't finalize your free gift.");
+      finish(giftId);
       btn.disabled = false; updatePayButton();
       return;
     }
 
     if (!window.Razorpay) throw new Error("Payment couldn't load. Check your connection and try again.");
+    if (RAZORPAY_KEY_ID.startsWith("PASTE_")) throw new Error("Razorpay key id isn't set up yet.");
 
     const rzp = new Razorpay({
-      key: order.key_id,
-      order_id: order.order_id,
-      amount: order.amount,
+      key: RAZORPAY_KEY_ID,
+      amount: state.finalAmount * 100, // paise
       currency: "INR",
       name: "A Father's Day Gift",
       description: "For " + state.dadName,
       theme: { color: "#8B4452" },
       handler: async (response) => {
         try {
-          const result = await callCheckout({
-            action: "verify_and_save",
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
-            discount_code: state.discountCode,
-            gift: giftPayload(),
-          });
-          finish(result.gift_id);
+          const { error: updateErr } = await sb.from("gifts")
+            .update({
+              paid: true,
+              amount_paid: state.finalAmount,
+              discount_code: state.discountCode,
+              razorpay_payment_id: response.razorpay_payment_id,
+            })
+            .eq("id", giftId);
+          if (updateErr) throw new Error(updateErr.message || "Couldn't save your gift after payment.");
+          finish(giftId);
         } catch (err) {
           errEl.textContent = "Payment succeeded but saving your gift failed (" + err.message + "). Keep this payment ID for support: " + response.razorpay_payment_id;
         } finally {
@@ -607,6 +646,10 @@ $("btnPay").addEventListener("click", async () => {
         }
       },
       modal: { ondismiss: () => { btn.disabled = false; updatePayButton(); } },
+    });
+    rzp.on("payment.failed", (response) => {
+      errEl.textContent = "Payment failed: " + (response.error && response.error.description ? response.error.description : "please try again.");
+      btn.disabled = false; updatePayButton();
     });
     rzp.open();
   } catch (err) {
